@@ -1,0 +1,418 @@
+/* ==========================================================================
+   EcoSense — Working 3D Smart Room Simulation Stylesheet
+   Three.js WebGL 3D Room, Raycasting Tooltips, and HUD Overlays
+   ========================================================================== */
+
+:root {
+  --bg-3d: #070d14;
+  --panel-3d: rgba(14, 23, 36, 0.88);
+  --border-3d: rgba(56, 189, 248, 0.25);
+  
+  --emerald-400: #34d399;
+  --emerald-500: #10b981;
+  --emerald-glow: rgba(16, 185, 129, 0.35);
+  
+  --sky-400: #38bdf8;
+  --sky-500: #0ea5e9;
+  
+  --amber-400: #fbbf24;
+  --rose-400: #f87171;
+  --rose-500: #ef4444;
+  
+  --text-main: #f8fafc;
+  --text-sub: #94a3b8;
+  --text-muted: #64748b;
+  
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  background: var(--bg-3d);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* --- Top Header Navigation --- */
+.header-3d {
+  background: rgba(14, 23, 36, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+.brand-3d-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-3d-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--emerald-500), #0284c7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 16px var(--emerald-glow);
+}
+
+.brand-3d-icon svg {
+  width: 22px;
+  height: 22px;
+  color: #fff;
+}
+
+.brand-3d-titles h1 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(90deg, #ffffff, #6ee7b7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.badge-3d {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background: rgba(14, 165, 233, 0.2);
+  color: var(--sky-400);
+  border: 1px solid rgba(14, 165, 233, 0.4);
+  -webkit-text-fill-color: var(--sky-400);
+}
+
+.brand-3d-titles p {
+  font-size: 0.76rem;
+  color: var(--text-sub);
+}
+
+.header-3d-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--emerald-500), var(--emerald-600));
+  color: #fff;
+  box-shadow: 0 2px 8px var(--emerald-glow);
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #10b981, #047857);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: rgba(14, 23, 36, 0.8);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--text-sub);
+}
+.btn-outline:hover {
+  color: #fff;
+  border-color: var(--sky-400);
+}
+
+/* --- 3D Viewport Main Stage --- */
+.stage-3d-container {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 50%, #0d1a29 0%, #05090f 100%);
+}
+
+#threeCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Floating HUD on Top of 3D Scene */
+.hud-top-bar {
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
+  z-index: 50;
+  gap: 16px;
+}
+
+.hud-pill-card {
+  background: var(--panel-3d);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  pointer-events: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hud-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-item-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.hud-item-val {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  font-family: monospace;
+}
+
+.hud-item-val.green { color: var(--emerald-400); }
+.hud-item-val.amber { color: var(--amber-400); }
+.hud-item-val.rose { color: var(--rose-400); }
+
+/* Camera View Preset Buttons */
+.camera-views-tray {
+  display: flex;
+  gap: 6px;
+  background: var(--panel-3d);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 5px;
+  pointer-events: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.camera-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-sub);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.camera-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+.camera-btn.active {
+  background: var(--sky-500);
+  color: #fff;
+}
+
+/* Floating Nudge Alert Banner inside 3D Scene */
+.nudge-3d-banner {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(239, 68, 68, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  border-left: 5px solid var(--rose-500);
+  border-radius: var(--radius-md);
+  padding: 10px 18px;
+  display: none;
+  align-items: center;
+  gap: 14px;
+  z-index: 60;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.25);
+  animation: slideDown3d 0.3s ease-out;
+  pointer-events: auto;
+}
+
+.nudge-3d-banner.active {
+  display: flex;
+}
+
+@keyframes slideDown3d {
+  from { opacity: 0; transform: translate(-50%, -10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.btn-nudge-fix {
+  background: var(--emerald-500);
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-nudge-fix:hover {
+  background: var(--emerald-400);
+}
+
+/* Interactive Appliance Control Dock at Bottom */
+.dock-3d {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--panel-3d);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-xl);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 50;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+  max-width: 95vw;
+  overflow-x: auto;
+}
+
+.dock-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 100px;
+}
+
+.dock-item-name {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.dock-item-watts {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.dock-switch-btn {
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dock-switch-btn.on {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: var(--emerald-400);
+  color: var(--emerald-400);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+}
+
+.dock-switch-btn.standby {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: var(--amber-400);
+  color: var(--amber-400);
+}
+
+.dock-switch-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* AC Slider in Dock */
+.dock-ac-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.dock-ac-slider {
+  width: 70px;
+  accent-color: var(--emerald-500);
+  cursor: pointer;
+}
+
+/* 3D Hover Tooltip */
+.tooltip-3d {
+  position: absolute;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--sky-400);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  color: #fff;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+  display: none;
+  transform: translate(-50%, -120%);
+  white-space: nowrap;
+}
+
+/* Mouse Instructions Hint */
+.controls-hint {
+  position: absolute;
+  bottom: 22px;
+  right: 22px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  background: rgba(15, 23, 42, 0.6);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+  z-index: 40;
+}

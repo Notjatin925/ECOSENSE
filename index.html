@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoSense — Smart Energy-Saving Reminder & Carbon Conservation System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Application Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-wrapper">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v8"></path>
+            <path d="m4.93 10.93 1.41 1.41"></path>
+            <path d="M2 18h2"></path>
+            <path d="M20 18h2"></path>
+            <path d="m19.07 10.93-1.41 1.41"></path>
+            <path d="M22 22H2"></path>
+            <path d="m8 22 4-10 4 10"></path>
+          </svg>
+        </div>
+        <div class="brand-titles">
+          <h1>EcoSense <span class="brand-badge">EVS Project</span></h1>
+          <p>Smart Energy-Saving Reminder & Carbon Conservation System</p>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <!-- Virtual Simulation Clock -->
+        <div class="sim-clock-card">
+          <span class="clock-pulse"></span>
+          <span>Time: <span class="clock-time" id="simClockDisplay">06:30 PM</span></span>
+          <span id="tariffBadge" class="tariff-tag tariff-peak">⚡ PEAK TARIFF</span>
+          <span id="backendBadge" class="tariff-tag" style="border-color:var(--border-color); color:var(--text-secondary);">Connecting...</span>
+        </div>
+
+        <!-- Simulation Speed Multiplier -->
+        <div class="btn-group">
+          <button id="speedBtn0" onclick="setSimSpeed(0)" title="Pause Simulation">⏸️</button>
+          <button id="speedBtn1" class="active" onclick="setSimSpeed(1)" title="Normal Speed (1s = 1min)">1x</button>
+          <button id="speedBtn5" onclick="setSimSpeed(5)" title="Fast Speed (1s = 5min)">5x</button>
+          <button id="speedBtn10" onclick="setSimSpeed(10)" title="Super Fast (1s = 10min)">10x</button>
+        </div>
+
+        <!-- Demo Preset Scenarios -->
+        <select class="scenario-select" onchange="loadScenario(this.value)">
+          <option value="" disabled selected>⚡ Load Demo Scenario...</option>
+          <option value="wasteful">⚠️ Careless Household (High Waste)</option>
+          <option value="eco">🌱 Eco-Champion (Zero Waste)</option>
+          <option value="vacation">✈️ Vacation Mode (Phantom Power Test)</option>
+        </select>
+
+        <!-- Sound Alert Toggle -->
+        <button id="soundToggleBtn" class="btn btn-outline" onclick="toggleSound()">
+          🔊 Sound: ON
+        </button>
+
+        <!-- Printable Audit Report Trigger -->
+        <button class="btn btn-primary" onclick="openAuditReport()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          Audit Report
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Bar -->
+  <nav class="app-nav">
+    <button class="nav-tab active" data-tab="tab-dashboard" onclick="switchTab('tab-dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"></rect>
+        <rect x="14" y="3" width="7" height="7"></rect>
+        <rect x="14" y="14" width="7" height="7"></rect>
+        <rect x="3" y="14" width="7" height="7"></rect>
+      </svg>
+      Live Simulation & Reminders
+    </button>
+    <button class="nav-tab" data-tab="tab-rules" onclick="switchTab('tab-rules')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+      </svg>
+      Behavioral Nudges & Rules
+    </button>
+    <button class="nav-tab" data-tab="tab-analytics" onclick="switchTab('tab-analytics')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="20" x2="18" y2="10"></line>
+        <line x1="12" y1="20" x2="12" y2="4"></line>
+        <line x1="6" y1="20" x2="6" y2="14"></line>
+      </svg>
+      Carbon & Climate Analytics
+    </button>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="main-container">
+
+    <!-- ================= TAB 1: LIVE SIMULATION & REMINDERS ================= -->
+    <div id="tab-dashboard" class="tab-panel active">
+      
+      <!-- Top Environmental KPI Metric Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card blue">
+          <div class="kpi-header">
+            <span class="kpi-title">Instantaneous Load</span>
+            <div class="kpi-icon-wrap">⚡</div>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="kpiCurrentWatts">0</span>
+            <span class="kpi-unit">Watts</span>
+          </div>
+          <p class="kpi-subtext">Active electrical power draw</p>
+        </div>
+
+        <div class="kpi-card green">
+          <div class="kpi-header">
+            <span class="kpi-title">Energy Consumed (Today)</span>
+            <div class="kpi-icon-wrap">🔋</div>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="kpiTotalKwh">0.00</span>
+            <span class="kpi-unit">kWh</span>
+          </div>
+          <p class="kpi-subtext">Cumulative household units</p>
+        </div>
+
+        <div class="kpi-card rose">
+          <div class="kpi-header">
+            <span class="kpi-title">Carbon Footprint</span>
+            <div class="kpi-icon-wrap">🏭</div>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="kpiCo2Kg">0.00</span>
+            <span class="kpi-unit">kg CO₂e</span>
+          </div>
+          <p class="kpi-subtext">Based on 0.82 kg CO₂/kWh grid factor</p>
+        </div>
+
+        <div class="kpi-card amber">
+          <div class="kpi-header">
+            <span class="kpi-title">Estimated Cost</span>
+            <div class="kpi-icon-wrap">💰</div>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="kpiEstCost">₹0.0</span>
+            <span class="kpi-unit">tariff</span>
+          </div>
+          <p class="kpi-subtext">Calculated at ₹8.0 per electricity unit</p>
+        </div>
+      </div>
+
+      <!-- Real-Time Smart Reminder & Nudge Engine Section -->
+      <section class="reminder-center-card">
+        <div class="reminder-header">
+          <div class="reminder-title-group">
+            <h2 style="font-size:1.15rem; font-weight:700;">🔔 Active Smart Reminders & Behavioral Nudges</h2>
+            <span id="reminderCountBadge" class="reminder-badge">Checking...</span>
+          </div>
+          <span style="font-size:0.78rem; color:var(--text-secondary);">
+            Automated alerts triggered by sensor rules & energy waste thresholds
+          </span>
+        </div>
+
+        <div class="reminder-list" id="reminderListContainer">
+          <!-- Dynamically populated by app.js -->
+        </div>
+      </section>
+
+      <!-- 2-Column Section: Rooms Grid + Environmental Impact Sidebar -->
+      <div class="dash-grid-2col">
+        <!-- Left: Smart Home Rooms & Appliances -->
+        <div>
+          <div class="rooms-section-header">
+            <h2>🏠 Smart Home Room Controls & Live Sensors</h2>
+            <span style="font-size:0.8rem; color:var(--text-secondary);">
+              Toggle switches, change AC temp, open doors/windows to test reminders
+            </span>
+          </div>
+
+          <div class="room-cards-grid" id="roomCardsContainer">
+            <!-- Dynamically populated by app.js -->
+          </div>
+        </div>
+
+        <!-- Right: Environmental Score & Planetary Equivalencies -->
+        <div>
+          <!-- Eco-Efficiency Score -->
+          <div class="side-card">
+            <h3>🌱 Household Eco-Score</h3>
+            <div class="eco-score-circle">
+              <span class="score-badge-big" id="ecoScoreValue">88</span>
+              <span class="score-label" id="ecoScoreGrade">Grade A (Eco-Conscious)</span>
+              <div class="score-progress-bar">
+                <div class="score-progress-fill" id="ecoScoreFill" style="width: 88%;"></div>
+              </div>
+            </div>
+            <p style="font-size:0.75rem; color:var(--text-secondary); text-align:center;">
+              Score penalizes active energy waste, unoptimized AC settings, and standby vampire drains.
+            </p>
+          </div>
+
+          <!-- Ecological Equivalencies -->
+          <div class="side-card">
+            <h3>🌍 Planetary Impact Equivalencies</h3>
+            <div class="impact-equivalents-list">
+              <div class="impact-item">
+                <div class="impact-item-icon">🌳</div>
+                <div>
+                  <div class="impact-item-val" id="impactTreeEquiv">2.4 Trees</div>
+                  <div class="impact-item-label">Needed annually to sequester monthly carbon</div>
+                </div>
+              </div>
+
+              <div class="impact-item">
+                <div class="impact-item-icon">💧</div>
+                <div>
+                  <div class="impact-item-val" id="impactWaterSaved">12.5 Liters</div>
+                  <div class="impact-item-label">Thermal plant cooling water conserved by reminders</div>
+                </div>
+              </div>
+
+              <div class="impact-item">
+                <div class="impact-item-icon">⛏️</div>
+                <div>
+                  <div class="impact-item-val" id="impactCoalAvoided">0.95 kg Coal</div>
+                  <div class="impact-item-label">Fossil fuel combustion prevented by smart habits</div>
+                </div>
+              </div>
+
+              <div class="impact-item">
+                <div class="impact-item-icon">💡</div>
+                <div>
+                  <div class="impact-item-val">34.5% Savings</div>
+                  <div class="impact-item-label">Average reduction with behavioral nudge systems</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= TAB 2: BEHAVIORAL NUDGES & RULES ================= -->
+    <div id="tab-rules" class="tab-panel">
+      <div class="doc-card">
+        <h2>🧠 Behavioral Nudge Theory in Energy Conservation</h2>
+        <p>
+          In traditional energy management, consumers only receive feedback once a month via an electricity bill. 
+          By the time the bill arrives, the opportunity to alter wasteful behavior has passed. 
+          <strong>EcoSense</strong> applies <em>Nudge Theory</em> (grounded in Nobel Prize-winning behavioral economics by Thaler & Sunstein) 
+          to provide <strong>contextual, immediate, actionable green reminders</strong> at the exact moment energy is being squandered.
+        </p>
+
+        <div class="comparison-grid">
+          <div class="comp-card bad">
+            <h4 style="color:var(--rose-400);">❌ The Unconscious Habit Loop</h4>
+            <ul>
+              <li>Leaving AC running at 18°C under blankets.</li>
+              <li>Leaving lights & ceiling fans ON when exiting rooms.</li>
+              <li>Leaving chargers, TV set-top boxes in standby mode 24/7.</li>
+              <li>Running energy-intensive appliances during high-carbon peak hours.</li>
+              <li>No real-time awareness of coal burned or carbon emitted.</li>
+            </ul>
+          </div>
+
+          <div class="comp-card good">
+            <h4 style="color:var(--emerald-400);">✅ The EcoSense Green Nudge Intervention</h4>
+            <ul>
+              <li>Automated prompt: "BEE recommends 24°C: Saves 30% power without sacrificing comfort."</li>
+              <li>PIR sensor simulation detects empty room for >5 mins & alerts user.</li>
+              <li>Standby vampire load detector flags continuous idle wattage.</li>
+              <li>Peak grid alerts encourage load-shifting to off-peak hours.</li>
+              <li>One-click remediation directly in the alert banner.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 style="margin-top:24px;">📋 The 6 Core Environmental Reminder Rules</h3>
+        <table class="data-table" style="margin-top:10px;">
+          <thead>
+            <tr>
+              <th>Rule ID</th>
+              <th>Trigger Condition</th>
+              <th>Environmental Waste Impact</th>
+              <th>Recommended Nudge Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>RULE-01: Vacancy Drain</strong></td>
+              <td>Room unoccupied > 5 mins with lights/fans active</td>
+              <td>~105 Watts wasted (~0.086 kg CO₂/hr)</td>
+              <td>Turn off unoccupied room switch with 1 click</td>
+            </tr>
+            <tr>
+              <td><strong>RULE-02: AC Thermal Delta</strong></td>
+              <td>Air conditioner thermostat set below 24°C</td>
+              <td>Each 1°C lower adds 6% compressor load (~160W/°C)</td>
+              <td>Nudge to 24°C (BEE national thermal comfort standard)</td>
+            </tr>
+            <tr>
+              <td><strong>RULE-03: Thermal Envelope Leak</strong></td>
+              <td>AC is active while room window is open</td>
+              <td>+400W continuous compressor overload</td>
+              <td>Alert user to seal thermal envelope immediately</td>
+            </tr>
+            <tr>
+              <td><strong>RULE-04: Vampire Standby Load</strong></td>
+              <td>TV, console, chargers idle in standby drawing >20W</td>
+              <td>Consumes ~5-10% of total household bill silently</td>
+              <td>Promote master switch shutoff to eliminate phantom draw</td>
+            </tr>
+            <tr>
+              <td><strong>RULE-05: Geyser Overrun</strong></td>
+              <td>Water boiler element active for >20 minutes</td>
+              <td>2000W element needlessly re-boils insulated water</td>
+              <td>Prompt shutoff: sufficient thermal energy stored</td>
+            </tr>
+            <tr>
+              <td><strong>RULE-06: Peak Grid Carbon</strong></td>
+              <td>Heavy loads run during 6 PM - 10 PM peak period</td>
+              <td>Grid activates coal peaker plants (+35% CO₂/kWh)</td>
+              <td>Advise postponing wash/ironing to solar or off-peak hours</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ================= TAB 3: CARBON & CLIMATE ANALYTICS ================= -->
+    <div id="tab-analytics" class="tab-panel">
+      <div class="doc-card">
+        <h2>🔬 Environmental Footprint Mathematical Modeling</h2>
+        <p>
+          To substantiate an Environmental Studies project, energy conservation must be quantified using peer-reviewed 
+          greenhouse gas (GHG) accounting standards and grid emission factors.
+        </p>
+
+        <h3>1. Carbon Dioxide Equivalent ($CO_2e$) Emission Formula</h3>
+        <div class="formula-box">
+          Emissions (kg CO₂) = Electricity Consumed (kWh) × Grid Carbon Intensity Factor (EF)<br>
+          Where EF = 0.82 kg CO₂/kWh (Average national grid emission factor for fossil-heavy electricity)
+        </div>
+
+        <h3>2. Thermal Comfort Energy Relation (AC 24°C Standard)</h3>
+        <div class="formula-box">
+          ΔEnergy (%) = (24°C - T_set) × 6.0%<br>
+          Operating at 18°C instead of 24°C: (24 - 18) × 6% = 36% Excess Power Consumption!
+        </div>
+
+        <h3>3. Tree Sequestration Equivalence</h3>
+        <div class="formula-box">
+          Trees Needed = Annual CO₂ Emissions (kg) ÷ 21.0 kg CO₂/tree/year<br>
+          A single standard 1.5-ton AC running 8 hrs/day produces ~2,800 kg CO₂ annually, requiring ~133 trees to offset.
+        </div>
+
+        <h3 style="margin-top:24px;">📊 Household Comparative Analysis: Before vs After EcoSense</h3>
+        <table class="data-table" style="margin-top:10px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Baseline Household (Unmonitored)</th>
+              <th>With EcoSense Reminder System</th>
+              <th>Environmental Benefit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Monthly Energy Consumption</strong></td>
+              <td>425.0 kWh</td>
+              <td>278.4 kWh</td>
+              <td><span style="color:var(--emerald-400); font-weight:700;">-146.6 kWh (-34.5%)</span></td>
+            </tr>
+            <tr>
+              <td><strong>Monthly Carbon Emissions</strong></td>
+              <td>348.5 kg CO₂e</td>
+              <td>228.3 kg CO₂e</td>
+              <td><span style="color:var(--emerald-400); font-weight:700;">-120.2 kg CO₂e Saved</span></td>
+            </tr>
+            <tr>
+              <td><strong>Coal Combustion Avoided</strong></td>
+              <td>276.2 kg Coal</td>
+              <td>180.9 kg Coal</td>
+              <td><span style="color:var(--emerald-400); font-weight:700;">95.3 kg Coal Avoided</span></td>
+            </tr>
+            <tr>
+              <td><strong>Thermal Power Plant Water Saved</strong></td>
+              <td>1,020 Liters</td>
+              <td>668 Liters</td>
+              <td><span style="color:var(--emerald-400); font-weight:700;">352 Liters Conserved</span></td>
+            </tr>
+            <tr>
+              <td><strong>Equivalent Urban Trees Required</strong></td>
+              <td>16.6 Trees</td>
+              <td>10.8 Trees</td>
+              <td><span style="color:var(--emerald-400); font-weight:700;">Reduced burden by 5.8 trees</span></td>
+            </tr>
+            <tr>
+              <td><strong>Monthly Financial Savings</strong></td>
+              <td>₹3,400</td>
+              <td>₹2,227</td>
+              <td><span style="color:var(--emerald-400); font-weight:700;">₹1,173 Saved / Month</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Printable Audit Report Modal -->
+  <div id="auditReportModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="print-report-header">
+        <div>
+          <h2 style="font-size:1.3rem; font-weight:800; color:#fff;">🌿 Household Environmental Energy Audit</h2>
+          <p style="color:var(--text-secondary); font-size:0.82rem;">Certified Green Living & Energy Efficiency Assessment</p>
+        </div>
+        <button class="btn btn-outline" onclick="closeAuditReport()">✕ Close</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-bottom:18px;">
+        <div style="background:var(--bg-card); padding:12px; border-radius:8px;">
+          <div style="font-size:0.75rem; color:var(--text-secondary);">ESTIMATED MONTHLY ENERGY</div>
+          <div style="font-size:1.3rem; font-weight:800; color:#38bdf8;" id="auditMonthlyKwh">0 kWh</div>
+        </div>
+        <div style="background:var(--bg-card); padding:12px; border-radius:8px;">
+          <div style="font-size:0.75rem; color:var(--text-secondary);">MONTHLY CARBON FOOTPRINT</div>
+          <div style="font-size:1.3rem; font-weight:800; color:#f87171;" id="auditMonthlyCo2">0 kg CO₂e</div>
+        </div>
+        <div style="background:var(--bg-card); padding:12px; border-radius:8px;">
+          <div style="font-size:0.75rem; color:var(--text-secondary);">SUSTAINABILITY RATING</div>
+          <div style="font-size:1.3rem; font-weight:800; color:#34d399;" id="auditScore">Grade A</div>
+        </div>
+      </div>
+
+      <h3 style="font-size:0.95rem; margin-bottom:10px;">Appliance Inventory & Emission Rates</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Appliance & Room</th>
+            <th>Current Status</th>
+            <th>Power (W)</th>
+            <th>Daily Consumption</th>
+            <th>Monthly CO₂ Impact</th>
+          </tr>
+        </thead>
+        <tbody id="auditTableBody">
+          <!-- Populated dynamically -->
+        </tbody>
+      </table>
+
+      <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-outline" onclick="closeAuditReport()">Close</button>
+        <button class="btn btn-primary" onclick="printReport()">🖨️ Print / Save as PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Tray -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

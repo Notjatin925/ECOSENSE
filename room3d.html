@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoSense — 3D Interactive Smart Room Simulation</title>
+  <link rel="stylesheet" href="room3d.css">
+  <!-- Local Three.js & OrbitControls for 100% Offline Execution -->
+  <script src="three.min.js"></script>
+  <script src="OrbitControls.js"></script>
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header class="header-3d">
+    <div class="brand-3d-wrap">
+      <div class="brand-3d-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+          <line x1="12" y1="22.08" x2="12" y2="12"></line>
+        </svg>
+      </div>
+      <div class="brand-3d-titles">
+        <h1>EcoSense 3D Room <span class="badge-3d">WebGL Simulation</span></h1>
+        <p>Interactive 3D Architectural Space & Real-Time Appliance Physics</p>
+      </div>
+    </div>
+
+    <div class="header-3d-actions">
+      <!-- Link to Analytics Dashboard -->
+      <a href="index.html" class="btn btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"></line>
+          <line x1="12" y1="20" x2="12" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="14"></line>
+        </svg>
+        Analytics Dashboard
+      </a>
+    </div>
+  </header>
+
+  <!-- 3D Canvas Main Viewport -->
+  <main class="stage-3d-container" id="threeCanvasContainer">
+
+    <!-- Top Floating HUD -->
+    <div class="hud-top-bar">
+      <!-- Live Energy & Carbon Metrics -->
+      <div class="hud-pill-card">
+        <div class="hud-item">
+          <span class="hud-item-label">3D Room Power</span>
+          <span class="hud-item-val" id="hudWatts3d">1,125 W</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-item-label">Carbon Rate</span>
+          <span class="hud-item-val rose" id="hudCarbon3d">15.4 g/min</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-item-label">Grid Factor</span>
+          <span class="hud-item-val green" style="font-size:0.95rem;">0.82 kg CO₂/kWh</span>
+        </div>
+      </div>
+
+      <!-- Quick Camera View Presets -->
+      <div class="camera-views-tray">
+        <button id="camBtnIso" class="camera-btn active" onclick="setCameraView3D('Iso')">🎥 Isometric</button>
+        <button id="camBtnAC" class="camera-btn" onclick="setCameraView3D('AC')">❄️ AC & Window</button>
+        <button id="camBtnFan" class="camera-btn" onclick="setCameraView3D('Fan')">🌀 Ceiling Fan</button>
+        <button id="camBtnTV" class="camera-btn" onclick="setCameraView3D('TV')">📺 Smart TV</button>
+      </div>
+    </div>
+
+    <!-- Floating 3D Nudge Alert Banner -->
+    <div id="nudgeBanner3d" class="nudge-3d-banner">
+      <span style="font-size:1.15rem;">⚠️</span>
+      <span id="nudgeText3d" style="font-size:0.82rem; font-weight:600; color:#fff;">Energy waste detected in 3D room.</span>
+      <button id="nudgeFixBtn3d" class="btn-nudge-fix">Fix Now</button>
+    </div>
+
+    <!-- Interactive Appliance Control Dock at Bottom -->
+    <div class="dock-3d">
+      <!-- Fan Control -->
+      <div class="dock-item">
+        <span class="dock-item-name">Ceiling Fan</span>
+        <button id="btnFan3d" class="dock-switch-btn on" onclick="toggleFan3D()">
+          Fan: ON
+        </button>
+      </div>
+
+      <!-- AC Control -->
+      <div class="dock-item">
+        <span class="dock-item-name">Inverter AC</span>
+        <button id="btnAc3d" class="dock-switch-btn on" onclick="toggleAc3D()">
+          AC: ON (24°C)
+        </button>
+        <div class="dock-ac-slider-wrap">
+          <span style="font-size:0.65rem; color:var(--text-sub);">Temp:</span>
+          <input type="range" class="dock-ac-slider" min="18" max="28" value="24" onchange="setAcTemp3D(this.value)">
+        </div>
+      </div>
+
+      <!-- TV Control -->
+      <div class="dock-item">
+        <span class="dock-item-name">Smart TV</span>
+        <button id="btnTv3d" class="dock-switch-btn on" onclick="cycleTv3D()">
+          TV: Active
+        </button>
+      </div>
+
+      <!-- Light Control -->
+      <div class="dock-item">
+        <span class="dock-item-name">Room Light</span>
+        <button id="btnLight3d" class="dock-switch-btn on" onclick="toggleLight3D()">
+          Light: ON
+        </button>
+      </div>
+
+      <!-- Window Control -->
+      <div class="dock-item">
+        <span class="dock-item-name">Window</span>
+        <button id="btnWindow3d" class="dock-switch-btn" onclick="toggleWindow3D()">
+          Window: Sealed ✓
+        </button>
+      </div>
+    </div>
+
+    <!-- Mouse Interaction Instructions Hint -->
+    <div class="controls-hint">
+      🖱️ <strong>Left Click + Drag:</strong> Rotate Room &nbsp;|&nbsp; <strong>Scroll:</strong> Zoom &nbsp;|&nbsp; <strong>Click Objects:</strong> Toggle On/Off
+    </div>
+
+    <!-- Floating 3D Hover Tooltip -->
+    <div id="tooltip3d" class="tooltip-3d"></div>
+
+  </main>
+
+  <script src="room3d.js"></script>
+</body>
+</html>
